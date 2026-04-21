@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block content %}
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <a href="{{ url_for('dashboard') }}" class="sidebar-brand">
+            <i class="fas fa-cloud me-2"></i>Cloud Optimizer
+        </a>
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+    
+    <div class="user-profile">
+        <div class="user-avatar">{{ current_user.username[0].upper() }}</div>
+        <div class="user-name">{{ current_user.username }}</div>
+        <div class="user-role">Administrator</div>
+    </div>
+    
+    <nav class="sidebar-nav">
+        <div class="nav-section">
+            <div class="nav-section-title">Main</div>
+            <a href="{{ url_for('dashboard') }}" class="sidebar-nav-item active">
+                <i class="fas fa-chart-line"></i>Dashboard
+            </a>
+            <a href="{{ url_for('upload') }}" class="sidebar-nav-item">
+                <i class="fas fa-cloud-upload-alt"></i>Upload Data
+            </a>
+            <a href="{{ url_for('resources') }}" class="sidebar-nav-item">
+                <i class="fas fa-server"></i>Resources
+            </a>
+            <a href="{{ url_for('analytics') }}" class="sidebar-nav-item">
+                <i class="fas fa-chart-bar"></i>Analytics
+            </a>
+        </div>
+        <div class="nav-section">
+            <div class="nav-section-title">Management</div>
+            <a href="{{ url_for('settings') }}" class="sidebar-nav-item">
+                <i class="fas fa-cog"></i>Settings
+            </a>
+        </div>
+        <div class="nav-section">
+            <div class="nav-section-title">Support</div>
+            <a href="{{ url_for('logout') }}" class="sidebar-nav-item">
+                <i class="fas fa-sign-out-alt"></i>Logout
+            </a>
+        </div>
+    </nav>
+</aside>
+
+<main class="main-content" id="mainContent">
+    <div class="top-nav">
+        <h2 class="h4 mb-0">Cosmic Report Details</h2>
+        <div class="top-nav-actions">
+            <a href="{{ url_for('export_report', report_id=report.id) }}" class="btn btn-galaxy">
+                <i class="fas fa-download me-2"></i>Export CSV
+            </a>
+        </div>
+    </div>
+
+    <div class="container-fluid p-4">
+        <!-- Stats Row -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="stat-icon bg-purple bg-opacity-20 text-purple me-3">
+                                <i class="fas fa-hashtag"></i>
+                            </div>
+                            <div>
+                                <h6 class="stat-label mb-0">Report ID</h6>
+                                <div class="stat-value h4 mb-0">#{{ report.id }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="stat-icon bg-pink bg-opacity-20 text-pink me-3">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div>
+                                <h6 class="stat-label mb-0">Total Monthly Cost</h6>
+                                <div class="stat-value h4 mb-0">${{ "%.2f"|format(report.total_cost) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="stat-icon bg-galaxy bg-opacity-20 text-galaxy me-3">
+                                <i class="fas fa-lightbulb"></i>
+                            </div>
+                            <div>
+                                <h6 class="stat-label mb-0">Insights Generated</h6>
+                                <div class="stat-value h4 mb-0">{{ report.recommendations|length }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <div class="card-body p-0">
+                <div class="p-4 d-flex justify-content-between align-items-center border-bottom border-secondary">
+                    <h5 class="mb-0">Recommendations</h5>
+                    <span class="text-muted small">Generated on {{ report.date_generated.strftime('%Y-%m-%d %H:%M') }}</span>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">Resource</th>
+                                <th>Utilization</th>
+                                <th>Suggestion</th>
+                                <th class="text-end pe-4">Potential Savings</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for rec in report.recommendations %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold">{{ rec.usage_data.resource.name }}</div>
+                                    <div class="small text-muted">{{ rec.usage_data.resource.type }}</div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress flex-grow-1 bg-dark me-2" style="height: 6px; max-width: 100px;">
+                                            <div class="progress-bar bg-galaxy" style="width: {{ rec.usage_data.avg_utilization_percent }}%"></div>
+                                        </div>
+                                        <span class="small">{{ "%.1f"|format(rec.usage_data.avg_utilization_percent) }}%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-info-circle text-galaxy me-2"></i>
+                                        <span>{{ rec.suggestion_text }}</span>
+                                    </div>
+                                </td>
+                                <td class="text-end pe-4 text-success fw-bold">
+                                    +${{ "%.2f"|format(rec.estimated_savings or 0) }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

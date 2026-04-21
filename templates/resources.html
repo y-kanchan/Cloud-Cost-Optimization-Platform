@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block content %}
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <a href="{{ url_for('dashboard') }}" class="sidebar-brand">
+            <i class="fas fa-cloud me-2"></i>Cloud Optimizer
+        </a>
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+    
+    <div class="user-profile">
+        <div class="user-avatar">{{ current_user.username[0].upper() }}</div>
+        <div class="user-name">{{ current_user.username }}</div>
+        <div class="user-role">Administrator</div>
+    </div>
+    
+    <nav class="sidebar-nav">
+        <div class="nav-section">
+            <div class="nav-section-title">Main</div>
+            <a href="{{ url_for('dashboard') }}" class="sidebar-nav-item">
+                <i class="fas fa-chart-line"></i>Dashboard
+            </a>
+            <a href="{{ url_for('upload') }}" class="sidebar-nav-item">
+                <i class="fas fa-cloud-upload-alt"></i>Upload Data
+            </a>
+            <a href="{{ url_for('resources') }}" class="sidebar-nav-item active">
+                <i class="fas fa-server"></i>Resources
+            </a>
+            <a href="{{ url_for('analytics') }}" class="sidebar-nav-item">
+                <i class="fas fa-chart-bar"></i>Analytics
+            </a>
+        </div>
+        <div class="nav-section">
+            <div class="nav-section-title">Management</div>
+            <a href="#" class="sidebar-nav-item">
+                <i class="fas fa-users"></i>Users
+            </a>
+            <a href="{{ url_for('settings') }}" class="sidebar-nav-item">
+                <i class="fas fa-cog"></i>Settings
+            </a>
+        </div>
+        <div class="nav-section">
+            <div class="nav-section-title">Support</div>
+            <a href="{{ url_for('logout') }}" class="sidebar-nav-item">
+                <i class="fas fa-sign-out-alt"></i>Logout
+            </a>
+        </div>
+    </nav>
+</aside>
+
+<main class="main-content" id="mainContent">
+    <div class="top-nav">
+        <h2 class="h4 mb-0">Resource Management</h2>
+        <div class="top-nav-actions">
+            <button class="btn btn-galaxy" data-bs-toggle="modal" data-bs-target="#addResourceModal">
+                <i class="fas fa-plus me-2"></i>Add Resource
+            </button>
+        </div>
+    </div>
+
+    <div class="container-fluid p-4">
+        <div class="dashboard-card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Hourly Rate</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for res in resources %}
+                            <tr class="hover-galaxy">
+                                <td>{{ res.name }}</td>
+                                <td><span class="badge bg-purple">{{ res.type }}</span></td>
+                                <td>${{ "%.4f"|format(res.hourly_rate) }}</td>
+                                <td>
+                                    <button class="btn btn-outline-galaxy btn-sm">Edit</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Add Resource Modal -->
+<div class="modal fade" id="addResourceModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title">Add New Resource</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Resource Name</label>
+                        <input type="text" name="name" class="form-control" required placeholder="e.g. EC2-XLarge">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Resource Type</label>
+                        <select name="type" class="form-control" required>
+                            <option value="Compute">Compute</option>
+                            <option value="Storage">Storage</option>
+                            <option value="Database">Database</option>
+                            <option value="Networking">Networking</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Hourly Rate ($)</label>
+                        <input type="number" step="0.0001" name="hourly_rate" class="form-control" required placeholder="0.0000">
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-galaxy">Save Resource</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1459 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Sidebar Navigation -->
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <a href="{{ url_for('dashboard') }}" class="sidebar-brand">
+            <i class="fas fa-cloud me-2"></i>Cloud Optimizer
+        </a>
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+    
+    <!-- User Profile -->
+    <div class="user-profile">
+        <div class="user-avatar">{{ current_user.username[0].upper() }}</div>
+        <div class="user-name">{{ current_user.username }}</div>
+        <div class="user-role">Administrator</div>
+    </div>
+    
+    <!-- Navigation Menu -->
+    <nav class="sidebar-nav">
+        <div class="nav-section">
+            <div class="nav-section-title">Main</div>
+            <a href="{{ url_for('dashboard') }}" class="sidebar-nav-item active">
+                <i class="fas fa-chart-line"></i>Dashboard
+            </a>
+            <a href="{{ url_for('upload') }}" class="sidebar-nav-item">
+                <i class="fas fa-cloud-upload-alt"></i>Upload Data
+            </a>
+            <a href="{{ url_for('resources') }}" class="sidebar-nav-item">
+                <i class="fas fa-server"></i>Resources
+            </a>
+            <a href="{{ url_for('analytics') }}" class="sidebar-nav-item">
+                <i class="fas fa-chart-bar"></i>Analytics
+            </a>
+        </div>
+        
+        <div class="nav-section">
+            <div class="nav-section-title">Management</div>
+            <a href="#" class="sidebar-nav-item">
+                <i class="fas fa-users"></i>Users
+            </a>
+            <a href="{{ url_for('settings') }}" class="sidebar-nav-item">
+                <i class="fas fa-cog"></i>Settings
+            </a>
+            <a href="{{ url_for('settings') }}" class="sidebar-nav-item">
+                <i class="fas fa-shield-alt"></i>Security
+            </a>
+        </div>
+        
+        <div class="nav-section">
+            <div class="nav-section-title">Support</div>
+            <a href="#" class="sidebar-nav-item">
+                <i class="fas fa-question-circle"></i>Help Center
+            </a>
+            <a href="#" class="sidebar-nav-item">
+                <i class="fas fa-file-alt"></i>Documentation
+            </a>
+            <a href="{{ url_for('logout') }}" class="sidebar-nav-item">
+                <i class="fas fa-sign-out-alt"></i>Logout
+            </a>
+        </div>
+    </nav>
+</aside>
+
+<!-- Main Content Area -->
+<main class="main-content" id="mainContent">
+    <!-- Top Navigation Bar -->
+    <div class="top-nav">
+        <div class="d-flex align-items-center">
+            <button class="sidebar-toggle d-md-none" id="mobileSidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search resources, reports...">
+            </div>
+        </div>
+        
+        <div class="top-nav-actions">
+            <button class="notification-btn">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge">3</span>
+            </button>
+            <button class="notification-btn">
+                <i class="fas fa-cog"></i>
+            </button>
+            <a href="{{ url_for('upload') }}" class="btn btn-galaxy">
+                <i class="fas fa-cloud-upload-alt me-2"></i>Upload Data
+            </a>
+        </div>
+    </div>
+    
+    <!-- Dashboard Content -->
+    <div class="container-fluid p-4">
+        <!-- Welcome Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="dashboard-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h1 class="h2 mb-1">Welcome back, <span class="text-primary-orange">{{ current_user.username }}</span></h1>
+                                <p class="text-muted mb-0">Here's what's happening with your cloud resources today</p>
+                            </div>
+                            <div class="text-end">
+                                <div class="text-muted small">Last login</div>
+                                <div>{{ 'Just now' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h3 class="h4 mb-3">Quick Actions</h3>
+                <div class="quick-actions">
+                    <a href="{{ url_for('upload') }}" class="quick-action-card">
+                        <div class="quick-action-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <div class="quick-action-title">Upload Data</div>
+                        <div class="quick-action-desc">Import CSV data for analysis</div>
+                    </a>
+                    <a href="{{ url_for('resources') }}" class="quick-action-card">
+                        <div class="quick-action-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <div class="quick-action-title">Add Resource</div>
+                        <div class="quick-action-desc">Create new cloud resource</div>
+                    </a>
+                    {% if reports %}
+                    <a href="{{ url_for('export_report', report_id=reports[0].id) }}" class="quick-action-card">
+                        <div class="quick-action-icon">
+                            <i class="fas fa-download"></i>
+                        </div>
+                        <div class="quick-action-title">Export Report</div>
+                        <div class="quick-action-desc">Download latest analysis</div>
+                    </a>
+                    {% else %}
+                    <a href="#" class="quick-action-card disabled">
+                        <div class="quick-action-icon">
+                            <i class="fas fa-download"></i>
+                        </div>
+                        <div class="quick-action-title">Export Report</div>
+                        <div class="quick-action-desc">No reports available</div>
+                    </a>
+                    {% endif %}
+                    <form action="{{ url_for('sync_data') }}" method="POST" class="d-contents">
+                        <button type="submit" class="quick-action-card border-0 w-100">
+                            <div class="quick-action-icon">
+                                <i class="fas fa-sync-alt"></i>
+                            </div>
+                            <div class="quick-action-title">Sync Data</div>
+                            <div class="quick-action-desc">Update cloud metrics</div>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resource Overview -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h3 class="h4 mb-3">Resource Overview</h3>
+                <div class="resource-grid">
+                    {% if recent_usages %}
+                        {% for usage in recent_usages %}
+                        <div class="resource-card">
+                            <div class="resource-header">
+                                <div class="resource-icon">
+                                    <i class="fas {% if usage.resource.type == 'Compute' %}fa-server{% elif usage.resource.type == 'Database' %}fa-database{% elif usage.resource.type == 'Storage' %}fa-hdd{% else %}fa-network-wired{% endif %}"></i>
+                                </div>
+                                <div class="resource-status {% if usage.avg_utilization_percent > 80 %}status-warning{% else %}status-active{% endif %}">
+                                    {% if usage.avg_utilization_percent > 80 %}Warning{% else %}Active{% endif %}
+                                </div>
+                            </div>
+                            <div class="resource-name">{{ usage.resource.name }}</div>
+                            <div class="resource-type">{{ usage.resource.type }}</div>
+                            <div class="resource-metrics">
+                                <div class="metric">
+                                    <div class="metric-value">{{ "%.0f"|format(usage.avg_utilization_percent) }}%</div>
+                                    <div class="metric-label">Utilization</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-value">{{ usage.usage_hours }}h</div>
+                                    <div class="metric-label">Runtime</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="col-12 text-center py-4">
+                            <p class="text-muted">No usage data found. Start by uploading a CSV.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+{% if reports %}
+{% set chart_labels = [] %}
+{% set cost_data = [] %}
+{% set savings_data = [] %}
+{% set total_cost_all = namespace(value=0) %}
+
+{% for report in reports|reverse %}
+    {% set _ = chart_labels.append("Report #" ~ report.id ~ " (" ~ report.date_generated.strftime('%m/%d') ~ ")") %}
+    {% set _ = cost_data.append(report.total_cost or 0) %}
+    {% set total_cost_all.value = total_cost_all.value + (report.total_cost or 0) %}
+    
+    {% set total_savings = namespace(value=0) %}
+    {% for rec in report.recommendations %}
+        {% if rec.estimated_savings %}
+            {% set total_savings.value = total_savings.value + rec.estimated_savings %}
+        {% endif %}
+    {% endfor %}
+    {% set _ = savings_data.append(total_savings.value or 0) %}
+{% endfor %}
+
+<!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fas fa-chart-line fa-2x text-primary-orange me-3"></i>
+                            <div>
+                                <h5 class="stat-label mb-0">Total Reports</h5>
+                                <div class="stat-value">{{ reports|length }}</div>
+                            </div>
+                        </div>
+                        <div class="progress" style="height: 4px;">
+                            <div class="progress-bar bg-gradient-galaxy" style="width: 75%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fas fa-dollar-sign fa-2x text-purple me-3"></i>
+                            <div>
+                                <h5 class="stat-label mb-0">Cumulative Cost</h5>
+                                <div class="stat-value">${{ "%.2f"|format(total_cost_all.value) }}</div>
+                            </div>
+                        </div>
+                        <div class="progress" style="height: 4px;">
+                            <div class="progress-bar bg-gradient-purple" style="width: 60%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-lightbulb fa-2x text-pink mb-2"></i>
+                        <h5 class="stat-label mb-2">Total Recommendations</h5>
+                        <div class="stat-value">{{ reports|map(attribute='recommendations')|map('length')|sum }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-piggy-bank fa-2x text-primary-orange mb-2"></i>
+                        <h5 class="stat-label mb-2">Potential Savings</h5>
+                        <div class="stat-value">${{ "%.2f"|format(savings_data|sum) }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<!-- Chart and Activity Row -->
+        <div class="row mb-4">
+            <div class="col-lg-8 mb-4">
+                <div class="dashboard-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-4">
+                            <i class="fas fa-chart-bar fa-2x text-primary-orange me-3"></i>
+                            <div>
+                                <h3 class="mb-1">Cost vs Savings Overview</h3>
+                                <p class="text-muted mb-0">Visualize your cloud optimization trends</p>
+                            </div>
+                        </div>
+                        <div class="chart-container" style="position: relative; height: 400px;">
+                            <canvas id="costSavingsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 mb-4">
+                <div class="dashboard-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-4">
+                            <i class="fas fa-history fa-2x text-primary-orange me-3"></i>
+                            <div>
+                                <h3 class="mb-1">Recent Activity</h3>
+                                <p class="text-muted mb-0">Latest system updates</p>
+                            </div>
+                        </div>
+                        <div class="activity-feed">
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="fas fa-upload"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Data Uploaded</div>
+                                    <div class="activity-desc">New CSV file processed successfully</div>
+                                    <div class="activity-time">2 hours ago</div>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Report Generated</div>
+                                    <div class="activity-desc">Cost analysis completed</div>
+                                    <div class="activity-time">5 hours ago</div>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="fas fa-server"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Resource Optimized</div>
+                                    <div class="activity-desc">Production server scaled down</div>
+                                    <div class="activity-time">1 day ago</div>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Cost Alert</div>
+                                    <div class="activity-desc">Monthly budget 85% used</div>
+                                    <div class="activity-time">2 days ago</div>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="fas fa-shield-alt"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Security Update</div>
+                                    <div class="activity-desc">All resources secured</div>
+                                    <div class="activity-time">3 days ago</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endif %}
+
+<!-- Reports Table -->
+        <div class="dashboard-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-file-alt fa-2x text-primary-orange me-3"></i>
+                        <div>
+                            <h3 class="mb-1">Your Reports</h3>
+                            <p class="text-muted mb-0">Detailed analysis and recommendations</p>
+                        </div>
+                    </div>
+                    {% if reports %}
+                    <div class="badge bg-galaxy px-3 py-2">
+                        {{ reports|length }} Reports
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if reports %}
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-secondary border-bottom">
+                                        <i class="fas fa-calendar-alt me-2"></i>Date Generated
+                                    </th>
+                                    <th class="text-secondary border-bottom">
+                                        <i class="fas fa-dollar-sign me-2"></i>Total Cost
+                                    </th>
+                                    <th class="text-secondary border-bottom">
+                                        <i class="fas fa-lightbulb me-2"></i>Recommendations
+                                    </th>
+                                    <th class="text-secondary border-bottom text-center">
+                                        <i class="fas fa-cog me-2"></i>Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for report in reports %}
+                                <tr class="hover-galaxy">
+                                    <td class="text-secondary">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-clock text-primary-orange me-2"></i>
+                                            {{ report.date_generated.strftime('%Y-%m-%d %H:%M') }}
+                                        </div>
+                                    </td>
+                                    <td class="text-secondary">
+                                        <span class="badge bg-galaxy fs-6">
+                                            ${{ "%.2f"|format(report.total_cost) }}
+                                        </span>
+                                    </td>
+                                    <td class="text-secondary">
+                                        <span class="badge bg-purple">
+                                            {{ report.recommendations|length }} suggestions
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex gap-2 justify-content-center">
+                                            <a href="{{ url_for('report_detail', report_id=report.id) }}" 
+                                               class="btn btn-galaxy btn-sm">
+                                                <i class="fas fa-eye me-1"></i>View
+                                            </a>
+                                            <form action="{{ url_for('delete_report', report_id=report.id) }}" 
+                                                  method="POST" 
+                                                  onsubmit="return confirm('Are you sure you want to delete this report?');" 
+                                                  class="m-0">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                    <i class="fas fa-trash me-1"></i>Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <div class="mb-4">
+                            <i class="fas fa-chart-line fa-4x text-primary-orange opacity-50"></i>
+                        </div>
+                        <h4 class="text-secondary mb-3">No Reports Found</h4>
+                        <p class="text-muted mb-4">Upload your usage data to generate your first optimization report.</p>
+                        <a href="{{ url_for('upload') }}" class="btn btn-galaxy">
+                            <i class="fas fa-cloud-upload-alt me-2"></i>Upload Data Now
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Enhanced Dashboard JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('mainContent');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
+    const searchBar = document.querySelector('.search-bar input');
+    
+    // Auto-dashboard feature with cursor movement
+    let cursorTimer;
+    let isAutoMode = false;
+    let lastCursorX = 0;
+    let lastCursorY = 0;
+    let cursorMoveCount = 0;
+    
+    function startAutoDashboard() {
+        isAutoMode = true;
+        console.log('Auto-dashboard mode activated');
+        showNotification('Auto-dashboard mode activated', 'info');
+        
+        // Auto-refresh dashboard data every 30 seconds
+        autoRefreshInterval = setInterval(function() {
+            if (isAutoMode) {
+                refreshDashboardData();
+            }
+        }, 30000);
+    }
+    
+    function stopAutoDashboard() {
+        isAutoMode = false;
+        console.log('Auto-dashboard mode deactivated');
+        if (autoRefreshInterval) {
+            clearInterval(autoRefreshInterval);
+        }
+    }
+    
+    // Cursor movement detection
+    document.addEventListener('mousemove', function(e) {
+        const deltaX = Math.abs(e.clientX - lastCursorX);
+        const deltaY = Math.abs(e.clientY - lastCursorY);
+        
+        if (deltaX > 50 || deltaY > 50) {
+            cursorMoveCount++;
+            lastCursorX = e.clientX;
+            lastCursorY = e.clientY;
+            
+            // Activate auto-dashboard after 10 significant cursor movements
+            if (cursorMoveCount >= 10 && !isAutoMode) {
+                startAutoDashboard();
+            }
+        }
+        
+        // Reset cursor movement count after 5 seconds of inactivity
+        clearTimeout(cursorTimer);
+        cursorTimer = setTimeout(function() {
+            cursorMoveCount = 0;
+            if (isAutoMode) {
+                stopAutoDashboard();
+            }
+        }, 5000);
+    });
+    
+    // Desktop sidebar toggle
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        });
+    }
+    
+    // Mobile sidebar toggle
+    if (mobileSidebarToggle) {
+        mobileSidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('mobile-open');
+        });
+    }
+    
+    // Close mobile sidebar when clicking outside
+    document.addEventListener('click', function(event) {
+        if (window.innerWidth <= 768) {
+            if (!sidebar.contains(event.target) && !mobileSidebarToggle.contains(event.target)) {
+                sidebar.classList.remove('mobile-open');
+            }
+        }
+    });
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+            sidebar.classList.remove('mobile-open');
+        }
+    });
+    
+    // Search functionality
+    if (searchBar) {
+        searchBar.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            filterContent(searchTerm);
+        });
+    }
+    
+    // Quick actions functionality
+    initializeQuickActions();
+    
+    // Resource cards functionality
+    initializeResourceCards();
+    
+    // Notification system
+    initializeNotifications();
+    
+    // Activity feed updates
+    startActivityFeedUpdates();
+});
+
+// Filter content based on search
+function filterContent(searchTerm) {
+    const cards = document.querySelectorAll('.resource-card, .activity-item');
+    cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        if (text.includes(searchTerm)) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+// Refresh dashboard data
+function refreshDashboardData() {
+    // Simulate data refresh
+    const statValues = document.querySelectorAll('.stat-value');
+    statValues.forEach(stat => {
+        const currentValue = parseFloat(stat.textContent.replace(/[^0-9.]/g, ''));
+        if (!isNaN(currentValue)) {
+            const variation = (Math.random() - 0.5) * 0.1; // ±5% variation
+            const newValue = currentValue * (1 + variation);
+            if (stat.textContent.includes('$')) {
+                stat.textContent = '$' + newValue.toFixed(2);
+            } else {
+                stat.textContent = Math.round(newValue);
+            }
+        }
+    });
+    
+    showNotification('Dashboard data refreshed', 'success');
+}
+
+// Show notification
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'info' ? 'secondary' : type === 'success' ? 'success' : 'warning'} position-fixed top-0 end-0 m-3`;
+    notification.style.zIndex = '9999';
+    notification.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas fa-${type === 'info' ? 'info-circle' : type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+            ${message}
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Initialize quick actions
+function initializeQuickActions() {
+    const quickActionCards = document.querySelectorAll('.quick-action-card');
+    quickActionCards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            e.preventDefault();
+            const title = this.querySelector('.quick-action-title').textContent;
+            
+            switch(title) {
+                case 'Upload Data':
+                    window.location.href = '/upload';
+                    break;
+                case 'Add Resource':
+                    showAddResourceModal();
+                    break;
+                case 'Export Report':
+                    exportLatestReport();
+                    break;
+                case 'Sync Data':
+                    syncCloudData();
+                    break;
+            }
+        });
+    });
+}
+
+// Initialize resource cards
+function initializeResourceCards() {
+    const resourceCards = document.querySelectorAll('.resource-card');
+    resourceCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const resourceName = this.querySelector('.resource-name').textContent;
+            showResourceDetails(resourceName);
+        });
+    });
+}
+
+// Initialize notifications
+function initializeNotifications() {
+    const notificationBtns = document.querySelectorAll('.notification-btn');
+    notificationBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            showNotificationDropdown();
+        });
+    });
+}
+
+// Start activity feed updates
+function startActivityFeedUpdates() {
+    // Simulate real-time updates
+    setInterval(() => {
+        if (Math.random() > 0.7) { // 30% chance of update
+            addNewActivity();
+        }
+    }, 15000);
+}
+
+// Add new random activity
+function addNewActivity() {
+    const activities = [
+        { title: 'System Update', desc: 'Cloud provider API updated', icon: 'fas fa-sync' },
+        { title: 'Cost Alert', desc: 'Monthly budget threshold reached', icon: 'fas fa-exclamation-triangle' },
+        { title: 'Resource Optimized', desc: 'Auto-scaling policy applied', icon: 'fas fa-chart-line' },
+        { title: 'Backup Completed', desc: 'Database backup successful', icon: 'fas fa-database' },
+        { title: 'Security Scan', desc: 'Vulnerability scan completed', icon: 'fas fa-shield-alt' }
+    ];
+    
+    const randomActivity = activities[Math.floor(Math.random() * activities.length)];
+    addActivityItem(randomActivity.title, randomActivity.desc, randomActivity.icon);
+}
+
+// Show add resource modal
+function showAddResourceModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade show';
+    modal.style.display = 'block';
+    modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-white">Add New Resource</h5>
+                    <button type="button" class="btn-close btn-close-white" onclick="this.closest('.modal').remove()"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addResourceForm">
+                        <div class="mb-3">
+                            <label class="form-label text-white">Resource Name</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white">Resource Type</label>
+                            <select class="form-control" name="type" required>
+                                <option value="">Select type...</option>
+                                <option value="EC2">EC2 Instance</option>
+                                <option value="RDS">RDS Instance</option>
+                                <option value="S3">S3 Bucket</option>
+                                <option value="ELB">Load Balancer</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white">Description</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                    <button type="button" class="btn btn-galaxy" onclick="addNewResource()">Add Resource</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Close modal when clicking outside
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
+// Add new resource
+function addNewResource() {
+    const form = document.getElementById('addResourceForm');
+    const formData = new FormData(form);
+    
+    const resourceName = formData.get('name');
+    const resourceType = formData.get('type');
+    
+    if (resourceName && resourceType) {
+        // Add new resource to the grid
+        const resourceGrid = document.querySelector('.resource-grid');
+        const newResourceCard = createResourceCard({
+            name: resourceName,
+            type: resourceType,
+            status: 'Active',
+            metrics: { cpu: '45%', memory: '32%' }
+        });
+        
+        resourceGrid.appendChild(newResourceCard);
+        
+        // Close modal
+        document.querySelector('.modal').remove();
+        
+        // Show success notification
+        showNotification(`Resource "${resourceName}" added successfully!`, 'success');
+        
+        // Add to activity feed
+        addActivityItem('Resource Added', `New ${resourceType} "${resourceName}" created`, 'fas fa-plus-circle');
+    }
+}
+
+// Export latest report
+function exportLatestReport() {
+    showNotification('Preparing report export...', 'info');
+    
+    setTimeout(() => {
+        // Create a dummy CSV download
+        const csvContent = "Report ID,Date,Total Cost,Savings\n1,2024-01-15,$1250.00,$325.00\n";
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'cloud_report_' + new Date().toISOString().split('T')[0] + '.csv';
+        a.click();
+        
+        showNotification('Report exported successfully!', 'success');
+        addActivityItem('Report Exported', 'Latest report downloaded as CSV', 'fas fa-download');
+    }, 1500);
+}
+
+// Sync cloud data
+function syncCloudData() {
+    showNotification('Syncing cloud data...', 'info');
+    
+    // Show progress
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        progress += 10;
+        if (progress <= 100) {
+            showNotification(`Syncing... ${progress}%`, 'info');
+        }
+    }, 500);
+    
+    setTimeout(() => {
+        clearInterval(progressInterval);
+        refreshDashboardData();
+        showNotification('Cloud data synchronized successfully!', 'success');
+        addActivityItem('Data Synced', 'Cloud metrics updated from providers', 'fas fa-sync-alt');
+    }, 5000);
+}
+
+// Show resource details
+function showResourceDetails(resourceName) {
+    showNotification(`Viewing details for ${resourceName}`, 'info');
+    // In a real app, this would navigate to a detailed view
+}
+
+// Show notification dropdown
+function showNotificationDropdown() {
+    showNotification('Notifications: 3 new alerts', 'info');
+}
+
+// Add new activity item
+function addActivityItem(title, description, icon) {
+    const activityFeed = document.querySelector('.activity-feed');
+    const newActivity = document.createElement('div');
+    newActivity.className = 'activity-item';
+    newActivity.style.opacity = '0';
+    newActivity.innerHTML = `
+        <div class="activity-icon">
+            <i class="${icon}"></i>
+        </div>
+        <div class="activity-content">
+            <div class="activity-title">${title}</div>
+            <div class="activity-desc">${description}</div>
+            <div class="activity-time">Just now</div>
+        </div>
+    `;
+    
+    activityFeed.insertBefore(newActivity, activityFeed.firstChild);
+    
+    // Fade in animation
+    setTimeout(() => {
+        newActivity.style.transition = 'opacity 0.5s';
+        newActivity.style.opacity = '1';
+    }, 100);
+    
+    // Remove oldest activity if too many
+    const activities = activityFeed.querySelectorAll('.activity-item');
+    if (activities.length > 10) {
+        activities[activities.length - 1].remove();
+    }
+}
+
+// Create resource card element
+function createResourceCard(resource) {
+    const card = document.createElement('div');
+    card.className = 'resource-card';
+    card.style.opacity = '0';
+    card.innerHTML = `
+        <div class="resource-header">
+            <div class="resource-icon">
+                <i class="fas fa-${getResourceIcon(resource.type)}"></i>
+            </div>
+            <div class="resource-status status-${resource.status.toLowerCase()}">${resource.status}</div>
+        </div>
+        <div class="resource-name">${resource.name}</div>
+        <div class="resource-type">${resource.type}</div>
+        <div class="resource-metrics">
+            <div class="metric">
+                <div class="metric-value">${resource.metrics.cpu}</div>
+                <div class="metric-label">CPU</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">${resource.metrics.memory}</div>
+                <div class="metric-label">Memory</div>
+            </div>
+        </div>
+    `;
+    
+    // Fade in animation
+    setTimeout(() => {
+        card.style.transition = 'opacity 0.5s';
+        card.style.opacity = '1';
+    }, 100);
+    
+    // Add click handler
+    card.addEventListener('click', function() {
+        showResourceDetails(resource.name);
+    });
+    
+    return card;
+}
+
+// Get resource icon based on type
+function getResourceIcon(type) {
+    const icons = {
+        'EC2': 'server',
+        'RDS': 'database',
+        'S3': 'hdd',
+        'ELB': 'network-wired'
+    };
+    return icons[type] || 'server';
+}
+
+// Settings functionality
+function showSettingsModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade show';
+    modal.style.display = 'block';
+    modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content bg-dark border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-white">Settings</h5>
+                    <button type="button" class="btn-close btn-close-white" onclick="this.closest('.modal').remove()"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-white mb-3">Dashboard Preferences</h6>
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="autoRefresh" checked>
+                                    <label class="form-check-label text-white" for="autoRefresh">
+                                        Auto-refresh dashboard
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="animations" checked>
+                                    <label class="form-check-label text-white" for="animations">
+                                        Enable animations
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-white">Refresh Interval</label>
+                                <select class="form-control" id="refreshInterval">
+                                    <option value="30">30 seconds</option>
+                                    <option value="60">1 minute</option>
+                                    <option value="300">5 minutes</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-white mb-3">Notifications</h6>
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                                    <label class="form-check-label text-white" for="emailNotifications">
+                                        Email notifications
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="costAlerts" checked>
+                                    <label class="form-check-label text-white" for="costAlerts">
+                                        Cost alerts
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="securityAlerts">
+                                    <label class="form-check-label text-white" for="securityAlerts">
+                                        Security alerts
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                    <button type="button" class="btn btn-galaxy" onclick="saveSettings()">Save Settings</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
+// Save settings
+function saveSettings() {
+    const settings = {
+        autoRefresh: document.getElementById('autoRefresh').checked,
+        animations: document.getElementById('animations').checked,
+        refreshInterval: document.getElementById('refreshInterval').value,
+        emailNotifications: document.getElementById('emailNotifications').checked,
+        costAlerts: document.getElementById('costAlerts').checked,
+        securityAlerts: document.getElementById('securityAlerts').checked
+    };
+    
+    localStorage.setItem('dashboardSettings', JSON.stringify(settings));
+    document.querySelector('.modal').remove();
+    showNotification('Settings saved successfully!', 'success');
+    addActivityItem('Settings Updated', 'Dashboard preferences saved', 'fas fa-cog');
+}
+
+// User management functionality
+function showUserManagementModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade show';
+    modal.style.display = 'block';
+    modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content bg-dark border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-white">User Management</h5>
+                    <button type="button" class="btn-close btn-close-white" onclick="this.closest('.modal').remove()"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="text-white mb-0">Active Users</h6>
+                        <button class="btn btn-galaxy btn-sm" onclick="showAddUserModal()">
+                            <i class="fas fa-plus me-1"></i>Add User
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-dark">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Last Login</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ current_user.username }}</td>
+                                    <td><span class="badge bg-primary">Admin</span></td>
+                                    <td><span class="badge bg-success">Active</span></td>
+                                    <td>Just now</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary me-1">Edit</button>
+                                        <button class="btn btn-sm btn-outline-danger">Remove</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Close</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
+// Add user modal
+function showAddUserModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade show';
+    modal.style.display = 'block';
+    modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-white">Add New User</h5>
+                    <button type="button" class="btn-close btn-close-white" onclick="this.closest('.modal').remove()"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addUserForm">
+                        <div class="mb-3">
+                            <label class="form-label text-white">Username</label>
+                            <input type="text" class="form-control" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white">Email</label>
+                            <input type="email" class="form-control" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white">Password</label>
+                            <input type="password" class="form-control" name="password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white">Role</label>
+                            <select class="form-control" name="role">
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                    <button type="button" class="btn btn-galaxy" onclick="addNewUser()">Add User</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
+// Add new user
+function addNewUser() {
+    const form = document.getElementById('addUserForm');
+    const formData = new FormData(form);
+    
+    const username = formData.get('username');
+    const email = formData.get('email');
+    
+    if (username && email) {
+        document.querySelector('.modal').remove();
+        showNotification(`User "${username}" added successfully!`, 'success');
+        addActivityItem('User Added', `New user "${username}" registered`, 'fas fa-user-plus');
+    }
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl/Cmd + K for search
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        document.querySelector('.search-bar input').focus();
+    }
+    
+    // Ctrl/Cmd + N for new resource
+    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        showAddResourceModal();
+    }
+    
+    // Ctrl/Cmd + S for sync
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        syncCloudData();
+    }
+    
+    // Ctrl/Cmd + E for export
+    if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+        e.preventDefault();
+        exportLatestReport();
+    }
+    
+    // Ctrl/Cmd + , for settings
+    if ((e.ctrlKey || e.metaKey) && e.key === ',') {
+        e.preventDefault();
+        showSettingsModal();
+    }
+    
+    // Escape to close modals
+    if (e.key === 'Escape') {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => modal.remove());
+    }
+    
+    // Alt + D for dashboard
+    if (e.altKey && e.key === 'd') {
+        e.preventDefault();
+        window.location.href = '/dashboard';
+    }
+    
+    // Alt + U for upload
+    if (e.altKey && e.key === 'u') {
+        e.preventDefault();
+        window.location.href = '/upload';
+    }
+    
+    // F1 for help
+    if (e.key === 'F1') {
+        e.preventDefault();
+        showHelpModal();
+    }
+});
+
+// Help modal
+function showHelpModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade show';
+    modal.style.display = 'block';
+    modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-white">Keyboard Shortcuts</h5>
+                    <button type="button" class="btn-close btn-close-white" onclick="this.closest('.modal').remove()"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-white mb-3">Navigation</h6>
+                            <div class="mb-2"><kbd>Alt + D</kbd> - Dashboard</div>
+                            <div class="mb-2"><kbd>Alt + U</kbd> - Upload Data</div>
+                            <div class="mb-2"><kbd>Ctrl + K</kbd> - Search</div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-white mb-3">Actions</h6>
+                            <div class="mb-2"><kbd>Ctrl + N</kbd> - Add Resource</div>
+                            <div class="mb-2"><kbd>Ctrl + S</kbd> - Sync Data</div>
+                            <div class="mb-2"><kbd>Ctrl + E</kbd> - Export Report</div>
+                        </div>
+                    </div>
+                    <hr class="border-secondary">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-white mb-3">System</h6>
+                            <div class="mb-2"><kbd>Ctrl + ,</kbd> - Settings</div>
+                            <div class="mb-2"><kbd>F1</kbd> - Help</div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-white mb-3">General</h6>
+                            <div class="mb-2"><kbd>Esc</kbd> - Close Modal</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-galaxy" onclick="this.closest('.modal').remove()">Got it!</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
+// Initialize sidebar navigation functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle sidebar navigation clicks
+    const sidebarNavItems = document.querySelectorAll('.sidebar-nav-item');
+    sidebarNavItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const text = this.textContent.trim();
+            
+            // Remove active class from all items
+            sidebarNavItems.forEach(navItem => navItem.classList.remove('active'));
+            
+            // Add active class to clicked item
+            this.classList.add('active');
+            
+            // Handle navigation
+            switch(text) {
+                case 'Dashboard':
+                    window.location.href = '/dashboard';
+                    break;
+                case 'Upload Data':
+                    window.location.href = '/upload';
+                    break;
+                case 'Resources':
+                    showNotification('Resource management coming soon!', 'info');
+                    break;
+                case 'Analytics':
+                    showNotification('Advanced analytics coming soon!', 'info');
+                    break;
+                case 'Users':
+                    showUserManagementModal();
+                    break;
+                case 'Settings':
+                    showSettingsModal();
+                    break;
+                case 'Security':
+                    showNotification('Security settings coming soon!', 'info');
+                    break;
+                case 'Help Center':
+                    showHelpModal();
+                    break;
+                case 'Documentation':
+                    showNotification('Documentation coming soon!', 'info');
+                    break;
+                case 'Logout':
+                    if (confirm('Are you sure you want to logout?')) {
+                        window.location.href = '/logout';
+                    }
+                    break;
+            }
+        });
+    });
+});
+</script>
+
+{% if reports %}
+<script id="chart-data" type="application/json">
+{
+    "labels": {{ chart_labels | tojson }},
+    "costData": {{ cost_data | tojson }},
+    "savingsData": {{ savings_data | tojson }}
+}
+</script>
+<script>
+    const rawData = document.getElementById('chart-data').textContent;
+    const parsedData = JSON.parse(rawData);
+
+    const labels = parsedData.labels;
+    const costData = parsedData.costData;
+    const savingsData = parsedData.savingsData;
+
+    const ctx = document.getElementById('costSavingsChart').getContext('2d');
+    
+    // Create gradient for cost data
+    const costGradient = ctx.createLinearGradient(0, 0, 0, 400);
+    costGradient.addColorStop(0, 'rgba(255, 107, 53, 0.8)');
+    costGradient.addColorStop(1, 'rgba(255, 140, 66, 0.8)');
+    
+    // Create gradient for savings data
+    const savingsGradient = ctx.createLinearGradient(0, 0, 0, 400);
+    savingsGradient.addColorStop(0, 'rgba(255, 167, 38, 0.8)');
+    savingsGradient.addColorStop(1, 'rgba(255, 107, 53, 0.8)');
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Total Cost ($)',
+                    data: costData,
+                    backgroundColor: costGradient,
+                    borderColor: 'rgba(255, 107, 53, 1)',
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    borderSkipped: false,
+                },
+                {
+                    label: 'Estimated Savings ($)',
+                    data: savingsData,
+                    backgroundColor: savingsGradient,
+                    borderColor: 'rgba(255, 167, 38, 1)',
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    borderSkipped: false,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        color: '#cbd5e1',
+                        font: {
+                            family: 'Inter',
+                            size: 14,
+                            weight: '500'
+                        },
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(30, 41, 59, 0.9)',
+                    titleColor: '#f8fafc',
+                    bodyColor: '#cbd5e1',
+                    borderColor: '#334155',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    padding: 12,
+                    displayColors: true,
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += new Intl.NumberFormat('en-US', {
+                                    style: 'currency',
+                                    currency: 'USD'
+                                }).format(context.parsed.y);
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        color: 'rgba(51, 65, 85, 0.3)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: '#94a3b8',
+                        font: {
+                            family: 'Inter',
+                            size: 12
+                        }
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(51, 65, 85, 0.3)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: '#94a3b8',
+                        font: {
+                            family: 'Inter',
+                            size: 12
+                        },
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    }
+                }
+            },
+            animation: {
+                duration: 2000,
+                easing: 'easeInOutQuart'
+            }
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}
