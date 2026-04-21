@@ -1,4 +1,5 @@
-from flask import Flask, render_template, redirect, url_for, flash, request
+from flask import Flask, render_template, redirect, url_for, flash, request, abort
+from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 import os
@@ -22,6 +23,16 @@ login_manager.init_app(app)
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+def admin_required(f):
+    @wraps(f)
+    @login_required
+    def decorated_function(*args, **kwargs):
+        if current_user.role != 'admin':
+            flash('Admin access required.', 'danger')
+            return redirect(url_for('dashboard'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route('/')
 def index():
@@ -98,6 +109,83 @@ def resources():
     all_resources = Resource.query.all()
     return render_template('resources.html', resources=all_resources)
 
+@app.route('/edit_resource/<int:resource_id>', methods=['POST'])
+@login_required
+@admin_required
+def edit_resource(resource_id):
+    resource = Resource.query.get_or_404(resource_id)
+    resource.name = request.form.get('name')
+    resource.type = request.form.get('type')
+    resource.hourly_rate = float(request.form.get('hourly_rate', 0))
+    db.session.commit()
+    flash('Resource updated successfully!', 'success')
+    return redirect(url_for('resources'))
+
+@app.route('/delete_resource/<int:resource_id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_resource(resource_id):
+    resource = Resource.query.get_or_404(resource_id)
+    db.session.delete(resource)
+    db.session.commit()
+    flash('Resource deleted successfully!', 'success')
+    return redirect(url_for('resources'))
+
+@app.route('/users')
+@login_required
+@admin_required
+def users():
+    all_users = User.query.all()
+    return render_template('users.html', users=all_users)
+
+@app.route('/add_user', methods=['POST'])
+@login_required
+@admin_required
+def add_user():
+    username = request.form.get('username')
+    password = request.form.get('password')
+    role = request.form.get('role', 'user')
+    
+    if User.query.filter_by(username=username).first():
+        flash('Username already exists', 'danger')
+        return redirect(url_for('users'))
+        
+    new_user = User(username=username, password_hash=generate_password_hash(password), role=role)
+    db.session.add(new_user)
+    db.session.commit()
+    flash('User added successfully!', 'success')
+    return redirect(url_for('users'))
+
+@app.route('/edit_user/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def edit_user(user_id):
+    user = User.query.get_or_404(user_id)
+    user.username = request.form.get('username')
+    user.role = request.form.get('role')
+    
+    password = request.form.get('password')
+    if password:
+        user.password_hash = generate_password_hash(password)
+        
+    db.session.commit()
+    flash('User updated successfully!', 'success')
+    return redirect(url_for('users'))
+
+@app.route('/delete_user/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_user(user_id):
+    if user_id == current_user.id:
+        flash('You cannot delete your own account!', 'danger')
+        return redirect(url_for('users'))
+        
+    user = User.query.get_or_404(user_id)
+    db.session.delete(user)
+    db.session.commit()
+    flash('User deleted successfully!', 'success')
+    return redirect(url_for('users'))
+
 @app.route('/analytics')
 @login_required
 def analytics():
@@ -109,10 +197,92 @@ def analytics():
 def settings():
     rules = ThresholdRule.query.all()
     if request.method == 'POST':
-        # logic for updating threshold rules or user profile can go here
-        flash('Settings updated successfully!', 'success')
+        action = request.form.get('action', '')
+        if action == 'update_profile':
+            current_user.email = request.form.get('email', '').strip()
+            current_user.display_name = request.form.get('display_name', '').strip()
+            db.session.commit()
+            flash('Profile updated successfully!', 'success')
+        elif action == 'update_notifications':
+            current_user.cost_alerts = 'cost_alerts' in request.form
+            current_user.weekly_reports = 'weekly_reports' in request.form
+            current_user.opt_tips = 'opt_tips' in request.form
+            current_user.sec_alerts = 'sec_alerts' in request.form
+            db.session.commit()
+            flash('Notification preferences saved!', 'success')
         return redirect(url_for('settings'))
     return render_template('settings.html', rules=rules)
+
+@app.route('/security', methods=['GET', 'POST'])
+@login_required
+def security():
+    if request.method == 'POST':
+        action = request.form.get('action', '')
+        if action == 'change_password':
+            current_password = request.form.get('current_password', '')
+            new_password = request.form.get('new_password', '')
+            confirm_password = request.form.get('confirm_password', '')
+            if not check_password_hash(current_user.password_hash, current_password):
+                flash('Current password is incorrect.', 'danger')
+            elif new_password != confirm_password:
+                flash('New passwords do not match.', 'danger')
+            elif len(new_password) < 6:
+                flash('New password must be at least 6 characters.', 'warning')
+            else:
+                current_user.password_hash = generate_password_hash(new_password)
+                db.session.commit()
+                flash('Password updated successfully!', 'success')
+        elif action == 'update_security':
+            current_user.enable_2fa = 'enable_2fa' in request.form
+            current_user.login_notify = 'login_notify' in request.form
+            current_user.session_timeout = request.form.get('session_timeout', '1 hour')
+            db.session.commit()
+            flash('Security settings updated!', 'success')
+        return redirect(url_for('security'))
+    return render_template('security.html')
+
+@app.route('/add_rule', methods=['POST'])
+@login_required
+@admin_required
+def add_rule():
+    res_type = request.form.get('resource_type')
+    op = request.form.get('operator')
+    val = float(request.form.get('value', 0))
+    rec = request.form.get('recommendation')
+    
+    new_rule = ThresholdRule(
+        resource_type=res_type,
+        condition_operator=op,
+        threshold_value=val,
+        recommendation_text=rec
+    )
+    db.session.add(new_rule)
+    db.session.commit()
+    flash('Threshold rule added!', 'success')
+    return redirect(url_for('settings'))
+
+@app.route('/edit_rule/<int:rule_id>', methods=['POST'])
+@login_required
+@admin_required
+def edit_rule(rule_id):
+    rule = ThresholdRule.query.get_or_404(rule_id)
+    rule.resource_type = request.form.get('resource_type')
+    rule.condition_operator = request.form.get('operator')
+    rule.threshold_value = float(request.form.get('value', 0))
+    rule.recommendation_text = request.form.get('recommendation')
+    db.session.commit()
+    flash('Rule updated successfully!', 'success')
+    return redirect(url_for('settings'))
+
+@app.route('/delete_rule/<int:rule_id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_rule(rule_id):
+    rule = ThresholdRule.query.get_or_404(rule_id)
+    db.session.delete(rule)
+    db.session.commit()
+    flash('Rule removed!', 'success')
+    return redirect(url_for('settings'))
 
 @app.route('/sync-data', methods=['POST'])
 @login_required

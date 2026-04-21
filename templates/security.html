@@ -1,0 +1,407 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <!-- Page Header -->
+    <div class="row align-items-center mb-4">
+        <div class="col">
+            <h2 class="h4 mb-0"><i class="fas fa-shield-alt me-2 text-primary-orange"></i>Security Center</h2>
+            <p class="text-muted small mb-0 mt-1">Manage your security settings and access controls</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Session Info -->
+        <div class="col-md-6">
+            <div class="dashboard-card h-100">
+                <div class="card-body">
+                    <h5 class="mb-4"><i class="fas fa-user-lock me-2 text-primary-orange"></i>Account Security</h5>
+                    <form method="POST" action="{{ url_for('security') }}">
+                        <input type="hidden" name="action" value="update_security">
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item bg-transparent border-secondary py-3 px-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="text-white fw-semibold">Logged in as</div>
+                                        <div class="text-muted small">{{ current_user.username }} &bull; {{ current_user.role | capitalize }}</div>
+                                    </div>
+                                    <span class="badge bg-success px-3 py-2"><i class="fas fa-check-circle me-1"></i>Active</span>
+                                </div>
+                            </div>
+                            <div class="list-group-item bg-transparent border-secondary py-3 px-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="text-white fw-semibold">Two-Factor Authentication</div>
+                                        <div class="text-muted small">Add an extra layer of security</div>
+                                    </div>
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" name="enable_2fa" id="toggle2FA" style="cursor:pointer;" {{ 'checked' if current_user.enable_2fa }}>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="list-group-item bg-transparent border-secondary py-3 px-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="text-white fw-semibold">Login Notifications</div>
+                                        <div class="text-muted small">Email alert on new sign-in</div>
+                                    </div>
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" name="login_notify" id="toggleLoginNotify" style="cursor:pointer;" {{ 'checked' if current_user.login_notify }}>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="list-group-item bg-transparent border-secondary py-3 px-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="text-white fw-semibold">Session Timeout</div>
+                                        <div class="text-muted small">Auto-logout after inactivity</div>
+                                    </div>
+                                    <select name="session_timeout" class="form-select form-select-sm" style="width:auto; background:#1a1a2e; color:#e0e0e0; border-color:#444;">
+                                        <option value="30 minutes" {{ 'selected' if current_user.session_timeout == '30 minutes' }}>30 minutes</option>
+                                        <option value="1 hour" {{ 'selected' if current_user.session_timeout == '1 hour' }}>1 hour</option>
+                                        <option value="4 hours" {{ 'selected' if current_user.session_timeout == '4 hours' }}>4 hours</option>
+                                        <option value="8 hours" {{ 'selected' if current_user.session_timeout == '8 hours' }}>8 hours</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-galaxy w-100 mt-3">
+                            <i class="fas fa-save me-2"></i>Save Security Settings
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Change Password -->
+        <div class="col-md-6">
+            <div class="dashboard-card h-100">
+                <div class="card-body">
+                    <h5 class="mb-4"><i class="fas fa-key me-2 text-primary-orange"></i>Change Password</h5>
+                    <form method="POST" action="{{ url_for('security') }}" id="changePasswordForm">
+                        <input type="hidden" name="action" value="change_password">
+                        <div class="mb-3">
+                            <label class="form-label">Current Password</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" name="current_password" id="currentPass" placeholder="Enter current password" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePass('currentPass', this)"><i class="fas fa-eye"></i></button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">New Password</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" name="new_password" id="newPass" placeholder="Enter new password" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePass('newPass', this)"><i class="fas fa-eye"></i></button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Confirm New Password</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" name="confirm_password" id="confirmPass" placeholder="Re-enter new password" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePass('confirmPass', this)"><i class="fas fa-eye"></i></button>
+                            </div>
+                        </div>
+                        <!-- Password Strength Bar -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <small class="text-muted">Password Strength</small>
+                                <small id="strengthLabel" class="text-muted">—</small>
+                            </div>
+                            <div class="progress" style="height:6px;">
+                                <div class="progress-bar" id="strengthBar" style="width:0%; transition: width 0.3s, background 0.3s;"></div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-galaxy w-100">
+                            <i class="fas fa-lock me-2"></i>Update Password
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Keyboard Shortcuts -->
+        <div class="col-12">
+            <div class="dashboard-card">
+                <div class="card-body">
+                    <h5 class="mb-1"><i class="fas fa-keyboard me-2 text-primary-orange"></i>Keyboard Shortcuts</h5>
+                    <p class="text-muted small mb-4">Use these shortcuts to navigate the platform faster</p>
+
+                    <div class="row g-3">
+                        <!-- Navigation Shortcuts -->
+                        <div class="col-md-4">
+                            <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+                                <h6 class="text-primary-orange mb-3"><i class="fas fa-compass me-2"></i>Navigation</h6>
+                                <div class="shortcut-list">
+                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-secondary">
+                                        <span class="text-muted small">Go to Dashboard</span>
+                                        <div class="d-flex gap-1">
+                                            <kbd class="shortcut-key">G</kbd>
+                                            <kbd class="shortcut-key">D</kbd>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-secondary">
+                                        <span class="text-muted small">Go to Analytics</span>
+                                        <div class="d-flex gap-1">
+                                            <kbd class="shortcut-key">G</kbd>
+                                            <kbd class="shortcut-key">A</kbd>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-secondary">
+                                        <span class="text-muted small">Go to Resources</span>
+                                        <div class="d-flex gap-1">
+                                            <kbd class="shortcut-key">G</kbd>
+                                            <kbd class="shortcut-key">R</kbd>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-secondary">
+                                        <span class="text-muted small">Go to Settings</span>
+                                        <div class="d-flex gap-1">
+                                            <kbd class="shortcut-key">G</kbd>
+                                            <kbd class="shortcut-key">S</kbd>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center py-2">
+                                        <span class="text-muted small">Go to Upload</span>
+                                        <div class="d-flex gap-1">
+                                            <kbd class="shortcut-key">G</kbd>
+                                            <kbd class="shortcut-key">U</kbd>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions Shortcuts -->
+                        <div class="col-md-4">
+                            <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+                                <h6 class="text-primary-orange mb-3"><i class="fas fa-bolt me-2"></i>Quick Actions</h6>
+                                <div class="shortcut-list">
+                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-secondary">
+                                        <span class="text-muted small">Upload Data</span>
+                                        <div class="d-flex gap-1">
+                                            <kbd class="shortcut-key">Ctrl</kbd>
+                                            <kbd class="shortcut-key">U</kbd>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-secondary">
+                                        <span class="text-muted small">Search</span>
+                                        <div class="d-flex gap-1">
+                                            <kbd class="shortcut-key">Ctrl</kbd>
+                                            <kbd class="shortcut-key">K</kbd>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-secondary">
+                                        <span class="text-muted small">Sync Data</span>
+                                        <div class="d-flex gap-1">
+                                            <kbd class="shortcut-key">Ctrl</kbd>
+                                            <kbd class="shortcut-key">Shift</kbd>
+                                            <kbd class="shortcut-key">S</kbd>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-secondary">
+                                        <span class="text-muted small">Export Report</span>
+                                        <div class="d-flex gap-1">
+                                            <kbd class="shortcut-key">Ctrl</kbd>
+                                            <kbd class="shortcut-key">E</kbd>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center py-2">
+                                        <span class="text-muted small">Refresh Page</span>
+                                        <div class="d-flex gap-1">
+                                            <kbd class="shortcut-key">Ctrl</kbd>
+                                            <kbd class="shortcut-key">R</kbd>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- UI Shortcuts -->
+                        <div class="col-md-4">
+                            <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+                                <h6 class="text-primary-orange mb-3"><i class="fas fa-desktop me-2"></i>Interface</h6>
+                                <div class="shortcut-list">
+                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-secondary">
+                                        <span class="text-muted small">Toggle Sidebar</span>
+                                        <div class="d-flex gap-1">
+                                            <kbd class="shortcut-key">Ctrl</kbd>
+                                            <kbd class="shortcut-key">B</kbd>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-secondary">
+                                        <span class="text-muted small">Dismiss Alerts</span>
+                                        <kbd class="shortcut-key">Esc</kbd>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-secondary">
+                                        <span class="text-muted small">Focus Search</span>
+                                        <div class="d-flex gap-1">
+                                            <kbd class="shortcut-key">/</kbd>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-secondary">
+                                        <span class="text-muted small">Open Help</span>
+                                        <div class="d-flex gap-1">
+                                            <kbd class="shortcut-key">?</kbd>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center py-2">
+                                        <span class="text-muted small">Logout</span>
+                                        <div class="d-flex gap-1">
+                                            <kbd class="shortcut-key">Ctrl</kbd>
+                                            <kbd class="shortcut-key">L</kbd>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- /.row -->
+
+                </div>
+            </div>
+        </div><!-- /shortcut col -->
+
+        <!-- Audit Log -->
+        <div class="col-12">
+            <div class="dashboard-card">
+                <div class="card-body">
+                    <h5 class="mb-4"><i class="fas fa-history me-2 text-primary-orange"></i>Recent Security Activity</h5>
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-secondary border-bottom"><i class="fas fa-calendar-alt me-2"></i>Time</th>
+                                    <th class="text-secondary border-bottom"><i class="fas fa-tag me-2"></i>Event</th>
+                                    <th class="text-secondary border-bottom"><i class="fas fa-map-marker-alt me-2"></i>Location</th>
+                                    <th class="text-secondary border-bottom text-center"><i class="fas fa-circle me-2"></i>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="hover-galaxy">
+                                    <td class="text-secondary small">Just now</td>
+                                    <td class="text-white">Viewed Security Settings</td>
+                                    <td class="text-secondary small"><i class="fas fa-globe me-1"></i>Local</td>
+                                    <td class="text-center"><span class="badge bg-success">Success</span></td>
+                                </tr>
+                                <tr class="hover-galaxy">
+                                    <td class="text-secondary small">Today</td>
+                                    <td class="text-white">Login Successful</td>
+                                    <td class="text-secondary small"><i class="fas fa-globe me-1"></i>Local</td>
+                                    <td class="text-center"><span class="badge bg-success">Success</span></td>
+                                </tr>
+                                <tr class="hover-galaxy">
+                                    <td class="text-secondary small">Yesterday</td>
+                                    <td class="text-white">Settings Updated</td>
+                                    <td class="text-secondary small"><i class="fas fa-globe me-1"></i>Local</td>
+                                    <td class="text-center"><span class="badge bg-secondary">Info</span></td>
+                                </tr>
+                                <tr class="hover-galaxy">
+                                    <td class="text-secondary small">2 days ago</td>
+                                    <td class="text-white">Password Changed</td>
+                                    <td class="text-secondary small"><i class="fas fa-globe me-1"></i>Local</td>
+                                    <td class="text-center"><span class="badge bg-success">Success</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /.row g-4 -->
+</div><!-- /.container-fluid -->
+
+<!-- Keyboard Shortcut Styles -->
+<style>
+    kbd.shortcut-key {
+        background: rgba(255, 107, 53, 0.15);
+        border: 1px solid rgba(255, 107, 53, 0.4);
+        color: #ff6b35;
+        border-radius: 5px;
+        padding: 2px 8px;
+        font-size: 0.75rem;
+        font-family: 'Segoe UI', monospace;
+        box-shadow: 0 2px 0 rgba(255, 107, 53, 0.3);
+        white-space: nowrap;
+    }
+</style>
+
+<script>
+function togglePass(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+
+// Password strength meter
+document.getElementById('newPass').addEventListener('input', function() {
+    const val = this.value;
+    let score = 0;
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+
+    const bar = document.getElementById('strengthBar');
+    const label = document.getElementById('strengthLabel');
+    const states = [
+        { pct: '0%',   bg: '#555',     text: '—' },
+        { pct: '25%',  bg: '#e53935',  text: 'Weak' },
+        { pct: '50%',  bg: '#fb8c00',  text: 'Fair' },
+        { pct: '75%',  bg: '#43a047',  text: 'Good' },
+        { pct: '100%', bg: '#00c853',  text: 'Strong' },
+    ];
+    const s = states[score];
+    bar.style.width = s.pct;
+    bar.style.background = s.bg;
+    label.textContent = s.text;
+    label.style.color = s.bg;
+});
+
+function saveSecuritySettings() {
+    const btn = event.currentTarget;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+    btn.disabled = true;
+    setTimeout(() => {
+        btn.innerHTML = '<i class="fas fa-check me-2"></i>Saved!';
+        setTimeout(() => {
+            btn.innerHTML = '<i class="fas fa-save me-2"></i>Save Security Settings';
+            btn.disabled = false;
+        }, 1500);
+    }, 800);
+}
+
+// Keyboard navigation shortcuts
+document.addEventListener('keydown', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+    
+    // 'G' prefix navigation
+    if (e.key === 'g' && !e.ctrlKey && !e.metaKey) {
+        window._gPrefix = true;
+        setTimeout(() => { window._gPrefix = false; }, 1000);
+        return;
+    }
+    if (window._gPrefix) {
+        window._gPrefix = false;
+        const map = { d: '/', a: '/analytics', r: '/resources', s: '/settings', u: '/upload' };
+        if (map[e.key]) { window.location.href = map[e.key]; return; }
+    }
+
+    // Ctrl shortcuts
+    if (e.ctrlKey) {
+        if (e.key === 'k') { e.preventDefault(); document.querySelector('.search-bar input')?.focus(); }
+        if (e.key === 'l') { e.preventDefault(); window.location.href = '/logout'; }
+        if (e.key === 'b') { e.preventDefault(); document.getElementById('sidebar')?.classList.toggle('collapsed'); }
+    }
+
+    // Focus search with /
+    if (e.key === '/') { e.preventDefault(); document.querySelector('.search-bar input')?.focus(); }
+});
+</script>
+{% endblock %}

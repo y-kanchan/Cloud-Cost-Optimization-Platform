@@ -1,115 +1,277 @@
 {% extends "base.html" %}
 
 {% block content %}
-<aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <a href="{{ url_for('dashboard') }}" class="sidebar-brand">
-            <i class="fas fa-cloud me-2"></i>Cloud Optimizer
-        </a>
-        <button class="sidebar-toggle" id="sidebarToggle">
-            <i class="fas fa-bars"></i>
-        </button>
-    </div>
-    
-    <div class="user-profile">
-        <div class="user-avatar">{{ current_user.username[0].upper() }}</div>
-        <div class="user-name">{{ current_user.username }}</div>
-        <div class="user-role">Administrator</div>
-    </div>
-    
-    <nav class="sidebar-nav">
-        <div class="nav-section">
-            <div class="nav-section-title">Main</div>
-            <a href="{{ url_for('dashboard') }}" class="sidebar-nav-item">
-                <i class="fas fa-chart-line"></i>Dashboard
-            </a>
-            <a href="{{ url_for('upload') }}" class="sidebar-nav-item">
-                <i class="fas fa-cloud-upload-alt"></i>Upload Data
-            </a>
-            <a href="{{ url_for('resources') }}" class="sidebar-nav-item">
-                <i class="fas fa-server"></i>Resources
-            </a>
-            <a href="{{ url_for('analytics') }}" class="sidebar-nav-item active">
-                <i class="fas fa-chart-bar"></i>Analytics
-            </a>
-        </div>
-        <div class="nav-section">
-            <div class="nav-section-title">Management</div>
-            <a href="{{ url_for('settings') }}" class="sidebar-nav-item">
-                <i class="fas fa-cog"></i>Settings
-            </a>
-        </div>
-        <div class="nav-section">
-            <div class="nav-section-title">Support</div>
-            <a href="{{ url_for('logout') }}" class="sidebar-nav-item">
-                <i class="fas fa-sign-out-alt"></i>Logout
-            </a>
-        </div>
-    </nav>
-</aside>
+<div class="container-fluid p-4">
 
-<main class="main-content" id="mainContent">
-    <div class="top-nav">
-        <h2 class="h4 mb-0">Analytics & Insights</h2>
+    <!-- Page Header -->
+    <div class="row align-items-center mb-4">
+        <div class="col">
+            <h2 class="h4 mb-0"><i class="fas fa-chart-bar me-2 text-primary-orange"></i>Analytics &amp; Insights</h2>
+            <p class="text-muted small mb-0 mt-1">Visual breakdown of your cloud cost data</p>
+        </div>
+        <div class="col-auto">
+            <select class="form-select form-select-sm" style="background:#1a1a2e; color:#e0e0e0; border-color:#444; width:auto;">
+                <option>Last 6 Months</option>
+                <option>Last 3 Months</option>
+                <option>This Month</option>
+                <option>This Year</option>
+            </select>
+        </div>
     </div>
 
-    <div class="container-fluid p-4">
-        <div class="row">
-            <div class="col-md-8">
-                <div class="dashboard-card">
-                    <div class="card-body">
-                        <h5 class="mb-4">Cost Trend over Time</h5>
-                        <div style="height: 400px;">
-                            <canvas id="costTrendChart"></canvas>
+    <!-- Summary KPI Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fas fa-dollar-sign fa-2x text-primary-orange"></i>
+                        <div>
+                            <div class="stat-label">Total Spend</div>
+                            <div class="stat-value">$8,900</div>
                         </div>
                     </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="dashboard-card">
-                    <div class="card-body">
-                        <h5 class="mb-4">Cost Breakdown by Type</h5>
-                        <div style="height: 400px;">
-                            <canvas id="typeBreakdownChart"></canvas>
-                        </div>
+                    <div class="progress mt-3" style="height:4px;">
+                        <div class="progress-bar bg-gradient-galaxy" style="width:72%"></div>
                     </div>
                 </div>
             </div>
         </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fas fa-piggy-bank fa-2x text-purple"></i>
+                        <div>
+                            <div class="stat-label">Potential Savings</div>
+                            <div class="stat-value">$2,140</div>
+                        </div>
+                    </div>
+                    <div class="progress mt-3" style="height:4px;">
+                        <div class="progress-bar bg-gradient-purple" style="width:45%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fas fa-server fa-2x text-pink"></i>
+                        <div>
+                            <div class="stat-label">Top Resource</div>
+                            <div class="stat-value" style="font-size:1.1rem;">Compute</div>
+                        </div>
+                    </div>
+                    <div class="progress mt-3" style="height:4px;">
+                        <div class="progress-bar" style="width:45%; background:#ff6b35;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fas fa-chart-line fa-2x text-primary-orange"></i>
+                        <div>
+                            <div class="stat-label">MoM Growth</div>
+                            <div class="stat-value" style="color:#ff8c42;">+14%</div>
+                        </div>
+                    </div>
+                    <div class="progress mt-3" style="height:4px;">
+                        <div class="progress-bar" style="width:60%; background:#ff8c42;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-</main>
+
+    <!-- Main Charts Row -->
+    <div class="row g-4 mb-4">
+
+        <!-- Cost Trend Chart (line) - col-8 -->
+        <div class="col-lg-8">
+            <div class="dashboard-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div>
+                            <h5 class="mb-0"><i class="fas fa-chart-line me-2 text-primary-orange"></i>Monthly Cost Trend</h5>
+                            <p class="text-muted small mb-0">Spending over the last 6 months</p>
+                        </div>
+                        <span class="badge bg-galaxy px-3 py-2">Live Data</span>
+                    </div>
+                    <div style="position: relative; height: 320px;">
+                        <canvas id="costTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cost Breakdown by Type (doughnut) - col-4 -->
+        <div class="col-lg-4">
+            <div class="dashboard-card h-100">
+                <div class="card-body">
+                    <h5 class="mb-1"><i class="fas fa-chart-pie me-2 text-primary-orange"></i>Cost Breakdown by Type</h5>
+                    <p class="text-muted small mb-4">Distribution across resource categories</p>
+                    <div style="position: relative; height: 220px;">
+                        <canvas id="typeBreakdownChart"></canvas>
+                    </div>
+                    <!-- Legend detail below chart -->
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between py-2 border-bottom border-secondary">
+                            <div class="d-flex align-items-center gap-2">
+                                <span style="width:12px;height:12px;border-radius:50%;background:#ff6b35;display:inline-block;"></span>
+                                <span class="text-muted small">Compute</span>
+                            </div>
+                            <strong class="text-white small">45% &nbsp; $4,005</strong>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-bottom border-secondary">
+                            <div class="d-flex align-items-center gap-2">
+                                <span style="width:12px;height:12px;border-radius:50%;background:#ff8c42;display:inline-block;"></span>
+                                <span class="text-muted small">Storage</span>
+                            </div>
+                            <strong class="text-white small">25% &nbsp; $2,225</strong>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-bottom border-secondary">
+                            <div class="d-flex align-items-center gap-2">
+                                <span style="width:12px;height:12px;border-radius:50%;background:#ffa726;display:inline-block;"></span>
+                                <span class="text-muted small">Database</span>
+                            </div>
+                            <strong class="text-white small">20% &nbsp; $1,780</strong>
+                        </div>
+                        <div class="d-flex justify-content-between py-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <span style="width:12px;height:12px;border-radius:50%;background:#ffcc80;display:inline-block;"></span>
+                                <span class="text-muted small">Networking</span>
+                            </div>
+                            <strong class="text-white small">10% &nbsp; $890</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div><!-- /.row main charts -->
+
+    <!-- Second Charts Row: Bar + Efficiency -->
+    <div class="row g-4 mb-4">
+
+        <!-- Cost vs Savings bar chart -->
+        <div class="col-lg-7">
+            <div class="dashboard-card h-100">
+                <div class="card-body">
+                    <h5 class="mb-1"><i class="fas fa-chart-bar me-2 text-primary-orange"></i>Cost vs. Savings</h5>
+                    <p class="text-muted small mb-4">Monthly actual spend compared to identified savings</p>
+                    <div style="position: relative; height: 250px;">
+                        <canvas id="costSavingsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Efficiency Gauge / Resource Efficiency -->
+        <div class="col-lg-5">
+            <div class="dashboard-card h-100">
+                <div class="card-body">
+                    <h5 class="mb-1"><i class="fas fa-tachometer-alt me-2 text-primary-orange"></i>Resource Efficiency</h5>
+                    <p class="text-muted small mb-4">Current utilization efficiency per type</p>
+                    <div class="d-flex flex-column gap-3">
+                        <div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted small"><i class="fas fa-server me-1"></i>Compute</span>
+                                <span class="text-primary-orange small fw-semibold">62%</span>
+                            </div>
+                            <div class="progress" style="height:8px; border-radius:4px;">
+                                <div class="progress-bar bg-gradient-galaxy" style="width:62%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted small"><i class="fas fa-hdd me-1"></i>Storage</span>
+                                <span class="small fw-semibold" style="color:#ff8c42;">41%</span>
+                            </div>
+                            <div class="progress" style="height:8px; border-radius:4px;">
+                                <div class="progress-bar" style="width:41%; background:#ff8c42;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted small"><i class="fas fa-database me-1"></i>Database</span>
+                                <span class="small fw-semibold" style="color:#ffa726;">78%</span>
+                            </div>
+                            <div class="progress" style="height:8px; border-radius:4px;">
+                                <div class="progress-bar" style="width:78%; background:#ffa726;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted small"><i class="fas fa-network-wired me-1"></i>Networking</span>
+                                <span class="small fw-semibold" style="color:#00c853;">88%</span>
+                            </div>
+                            <div class="progress" style="height:8px; border-radius:4px;">
+                                <div class="progress-bar" style="width:88%; background:#00c853;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3 rounded-3 mt-4" style="background:rgba(255,107,53,0.08); border:1px solid rgba(255,107,53,0.2);">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-lightbulb text-primary-orange"></i>
+                            <span class="text-muted small">Storage is underutilized. Consider right-sizing or consolidating to <strong class="text-white">save up to $680/mo</strong>.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /.row second charts -->
+
+</div><!-- /.container-fluid -->
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Dummy analytics data for now
+    const commonGridColor = 'rgba(255,255,255,0.06)';
+    const tickColor = '#9e9e9e';
+
+    // ---- Cost Trend Line Chart ----
     const ctxTrend = document.getElementById('costTrendChart').getContext('2d');
     new Chart(ctxTrend, {
         type: 'line',
         data: {
             labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
             datasets: [{
-                label: 'Monthly Spending',
+                label: 'Monthly Spending ($)',
                 data: [1200, 1900, 1500, 2100, 1800, 2400],
                 borderColor: '#ff6b35',
+                pointBackgroundColor: '#ff6b35',
+                pointRadius: 5,
+                pointHoverRadius: 8,
                 tension: 0.4,
                 fill: true,
-                backgroundColor: 'rgba(255, 107, 53, 0.1)'
+                backgroundColor: 'rgba(255, 107, 53, 0.12)'
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { labels: { color: '#e0e0e0' } }
+                legend: { labels: { color: tickColor, font: { size: 12 } } },
+                tooltip: { backgroundColor: '#1a1a2e', titleColor: '#ff6b35', bodyColor: '#e0e0e0' }
             },
             scales: {
-                y: { grid: { color: '#2a2a2a' }, ticks: { color: '#e0e0e0' } },
-                x: { grid: { color: '#2a2a2a' }, ticks: { color: '#e0e0e0' } }
+                y: {
+                    grid: { color: commonGridColor },
+                    ticks: { color: tickColor, callback: v => '$' + v }
+                },
+                x: {
+                    grid: { color: commonGridColor },
+                    ticks: { color: tickColor }
+                }
             }
         }
     });
 
+    // ---- Type Breakdown Doughnut Chart ----
     const ctxType = document.getElementById('typeBreakdownChart').getContext('2d');
     new Chart(ctxType, {
         type: 'doughnut',
@@ -118,16 +280,65 @@ document.addEventListener('DOMContentLoaded', function() {
             datasets: [{
                 data: [45, 25, 20, 10],
                 backgroundColor: ['#ff6b35', '#ff8c42', '#ffa726', '#ffcc80'],
-                borderWidth: 0
+                borderColor: '#0f0f1e',
+                borderWidth: 3,
+                hoverOffset: 10
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            cutout: '62%',
             plugins: {
-                legend: { 
-                    position: 'bottom',
-                    labels: { color: '#e0e0e0' } 
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1a1a2e',
+                    titleColor: '#ff6b35',
+                    bodyColor: '#e0e0e0',
+                    callbacks: {
+                        label: ctx => ` ${ctx.label}: ${ctx.parsed}%`
+                    }
+                }
+            }
+        }
+    });
+
+    // ---- Cost vs Savings Bar Chart ----
+    const ctxBar = document.getElementById('costSavingsChart').getContext('2d');
+    new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [
+                {
+                    label: 'Actual Cost ($)',
+                    data: [1200, 1900, 1500, 2100, 1800, 2400],
+                    backgroundColor: 'rgba(255, 107, 53, 0.75)',
+                    borderRadius: 5
+                },
+                {
+                    label: 'Identified Savings ($)',
+                    data: [240, 380, 300, 420, 360, 480],
+                    backgroundColor: 'rgba(0, 200, 83, 0.65)',
+                    borderRadius: 5
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: tickColor, font: { size: 12 } } },
+                tooltip: { backgroundColor: '#1a1a2e', titleColor: '#ff6b35', bodyColor: '#e0e0e0' }
+            },
+            scales: {
+                y: {
+                    grid: { color: commonGridColor },
+                    ticks: { color: tickColor, callback: v => '$' + v }
+                },
+                x: {
+                    grid: { color: 'transparent' },
+                    ticks: { color: tickColor }
                 }
             }
         }

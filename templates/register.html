@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block content %}
+{% block auth_content %}
 <div class="container">
     <div class="row justify-content-center align-items-center min-vh-100">
         <div class="col-11 col-md-6 col-lg-5 col-xl-4 text-center">
@@ -31,6 +31,14 @@
                         <div class="mb-4">
                             <label for="confirm_password" class="form-label">Confirm Password</label>
                             <input type="password" id="confirm_password" name="confirm_password" class="form-control form-control-lg" placeholder="Repeat your password" required>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="role" class="form-label">Role</label>
+                            <select id="role" name="role" class="form-select form-select-lg bg-dark border-secondary text-white">
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                            </select>
                         </div>
                         
                         <button type="submit" class="btn btn-galaxy btn-lg w-100 mb-4">

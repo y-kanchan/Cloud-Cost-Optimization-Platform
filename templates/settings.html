@@ -1,101 +1,314 @@
 {% extends "base.html" %}
 
 {% block content %}
-<aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <a href="{{ url_for('dashboard') }}" class="sidebar-brand">
-            <i class="fas fa-cloud me-2"></i>Cloud Optimizer
-        </a>
-        <button class="sidebar-toggle" id="sidebarToggle">
-            <i class="fas fa-bars"></i>
-        </button>
-    </div>
-    
-    <div class="user-profile">
-        <div class="user-avatar">{{ current_user.username[0].upper() }}</div>
-        <div class="user-name">{{ current_user.username }}</div>
-        <div class="user-role">Administrator</div>
-    </div>
-    
-    <nav class="sidebar-nav">
-        <div class="nav-section">
-            <div class="nav-section-title">Main</div>
-            <a href="{{ url_for('dashboard') }}" class="sidebar-nav-item">
-                <i class="fas fa-chart-line"></i>Dashboard
-            </a>
-            <a href="{{ url_for('upload') }}" class="sidebar-nav-item">
-                <i class="fas fa-cloud-upload-alt"></i>Upload Data
-            </a>
-            <a href="{{ url_for('resources') }}" class="sidebar-nav-item">
-                <i class="fas fa-server"></i>Resources
-            </a>
-            <a href="{{ url_for('analytics') }}" class="sidebar-nav-item">
-                <i class="fas fa-chart-bar"></i>Analytics
-            </a>
+<div class="container-fluid p-4">
+    <!-- Page Header -->
+    <div class="row align-items-center mb-4">
+        <div class="col">
+            <h2 class="h4 mb-0"><i class="fas fa-cog me-2 text-primary-orange"></i>System Settings</h2>
+            <p class="text-muted small mb-0 mt-1">Manage your profile and optimization rules</p>
         </div>
-        <div class="nav-section">
-            <div class="nav-section-title">Management</div>
-            <a href="{{ url_for('settings') }}" class="sidebar-nav-item active">
-                <i class="fas fa-cog"></i>Settings
-            </a>
-        </div>
-        <div class="nav-section">
-            <div class="nav-section-title">Support</div>
-            <a href="{{ url_for('logout') }}" class="sidebar-nav-item">
-                <i class="fas fa-sign-out-alt"></i>Logout
-            </a>
-        </div>
-    </nav>
-</aside>
-
-<main class="main-content" id="mainContent">
-    <div class="top-nav">
-        <h2 class="h4 mb-0">System Settings</h2>
     </div>
 
-    <div class="container-fluid p-4">
-        <div class="row">
-            <div class="col-md-6">
-                <div class="dashboard-card">
-                    <div class="card-body">
-                        <h5 class="mb-4"><i class="fas fa-user-circle me-2"></i>Profile Settings</h5>
-                        <form method="POST">
-                            <div class="mb-3">
-                                <label class="form-label">Username</label>
-                                <input type="text" class="form-control" value="{{ current_user.username }}" readonly>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Email Address</label>
-                                <input type="email" class="form-control" placeholder="your@email.com">
-                            </div>
-                            <button type="submit" class="btn btn-galaxy">Update Profile</button>
-                        </form>
-                    </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="row g-4">
+
+        <!-- Profile Settings -->
+        <div class="col-md-6">
+            <div class="dashboard-card h-100">
+                <div class="card-body">
+                    <h5 class="mb-4"><i class="fas fa-user-circle me-2 text-primary-orange"></i>Profile Settings</h5>
+                    <form method="POST" action="{{ url_for('settings') }}" id="profileForm">
+                        <input type="hidden" name="action" value="update_profile">
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" class="form-control" value="{{ current_user.username }}" readonly
+                                   style="background: rgba(255,255,255,0.04); color: #888; cursor: not-allowed;">
+                            <div class="form-text text-muted">Username cannot be changed.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Role</label>
+                            <input type="text" class="form-control" value="{{ current_user.role | capitalize }}" readonly
+                                   style="background: rgba(255,255,255,0.04); color: #888; cursor: not-allowed;">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-control" name="email"
+                                   placeholder="your@email.com" value="{{ current_user.email if current_user.email else '' }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Display Name</label>
+                            <input type="text" class="form-control" name="display_name"
+                                   placeholder="Your display name" value="{{ current_user.display_name if current_user.display_name else '' }}">
+                        </div>
+                        <button type="submit" class="btn btn-galaxy w-100">
+                            <i class="fas fa-save me-2"></i>Update Profile
+                        </button>
+                    </form>
                 </div>
             </div>
-            
-            <div class="col-md-6">
-                <div class="dashboard-card">
-                    <div class="card-body">
-                        <h5 class="mb-4"><i class="fas fa-bell me-2"></i>Threshold Rules</h5>
-                        <div class="list-group list-group-flush">
-                            {% for rule in rules %}
+        </div>
+
+        <!-- Notification Preferences -->
+        <div class="col-md-6">
+            <div class="dashboard-card h-100">
+                <div class="card-body">
+                    <h5 class="mb-4"><i class="fas fa-bell me-2 text-primary-orange"></i>Notification Preferences</h5>
+                    <form method="POST" action="{{ url_for('settings') }}">
+                        <input type="hidden" name="action" value="update_notifications">
+                        <div class="list-group list-group-flush mb-4">
                             <div class="list-group-item bg-transparent border-secondary py-3 px-0">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h6 class="mb-1 text-white">{{ rule.resource_type }} Rule</h6>
-                                        <p class="text-muted small mb-0">{{ rule.condition_operator }} {{ rule.threshold_value }}% -> {{ rule.recommendation_text }}</p>
+                                        <div class="text-white fw-semibold">Cost Alerts</div>
+                                        <div class="text-muted small">Notify when budget threshold is exceeded</div>
                                     </div>
-                                    <button class="btn btn-sm btn-outline-galaxy"><i class="fas fa-edit"></i></button>
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" name="cost_alerts" id="costAlerts" {{ 'checked' if current_user.cost_alerts }}>
+                                    </div>
                                 </div>
                             </div>
-                            {% endfor %}
+                            <div class="list-group-item bg-transparent border-secondary py-3 px-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="text-white fw-semibold">Weekly Reports</div>
+                                        <div class="text-muted small">Receive a weekly cost summary</div>
+                                    </div>
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" name="weekly_reports" id="weeklyReports" {{ 'checked' if current_user.weekly_reports }}>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="list-group-item bg-transparent border-secondary py-3 px-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="text-white fw-semibold">Optimization Tips</div>
+                                        <div class="text-muted small">Suggestions to reduce cloud spend</div>
+                                    </div>
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" name="opt_tips" id="optTips" {{ 'checked' if current_user.opt_tips }}>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="list-group-item bg-transparent border-0 py-3 px-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="text-white fw-semibold">Security Alerts</div>
+                                        <div class="text-muted small">Notify on suspicious activity</div>
+                                    </div>
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" name="sec_alerts" id="secAlerts" {{ 'checked' if current_user.sec_alerts }}>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <button class="btn btn-outline-galaxy w-100 mt-4">Add New Rule</button>
-                    </div>
+                        <button type="submit" class="btn btn-outline-galaxy w-100">
+                            <i class="fas fa-save me-2"></i>Save Preferences
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
+
+        <!-- Threshold Rules -->
+        <div class="col-12">
+            <div class="dashboard-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h5 class="mb-1"><i class="fas fa-sliders-h me-2 text-primary-orange"></i>Threshold Rules</h5>
+                            <p class="text-muted small mb-0">Configure optimization triggers for cloud resources</p>
+                        </div>
+                        {% if current_user.role == 'admin' %}
+                        <button class="btn btn-galaxy" data-bs-toggle="modal" data-bs-target="#addRuleModal">
+                            <i class="fas fa-plus me-2"></i>Add Rule
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    {% if rules %}
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-secondary border-bottom">Resource Type</th>
+                                    <th class="text-secondary border-bottom">Condition</th>
+                                    <th class="text-secondary border-bottom">Recommendation</th>
+                                    {% if current_user.role == 'admin' %}
+                                    <th class="text-secondary border-bottom text-center">Actions</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for rule in rules %}
+                                <tr class="hover-galaxy">
+                                    <td>
+                                        <span class="badge bg-galaxy px-3 py-2">
+                                            <i class="fas {% if rule.resource_type == 'Compute' %}fa-server{% elif rule.resource_type == 'Storage' %}fa-hdd{% elif rule.resource_type == 'Database' %}fa-database{% else %}fa-network-wired{% endif %} me-1"></i>
+                                            {{ rule.resource_type }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted">Utilization</span>
+                                        <strong class="text-white mx-1">{{ rule.condition_operator }}</strong>
+                                        <span class="text-primary-orange">{{ rule.threshold_value }}%</span>
+                                    </td>
+                                    <td class="text-muted small">{{ rule.recommendation_text }}</td>
+                                    {% if current_user.role == 'admin' %}
+                                    <td class="text-center">
+                                        <div class="d-flex gap-2 justify-content-center">
+                                            <button class="btn btn-sm btn-outline-galaxy" data-bs-toggle="modal" data-bs-target="#editRuleModal{{ rule.id }}">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <form action="{{ url_for('delete_rule', rule_id=rule.id) }}" method="POST" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove this rule?')">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+
+                                <!-- Edit Rule Modal -->
+                                <div class="modal fade" id="editRuleModal{{ rule.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content glass-modal border-secondary">
+                                            <div class="modal-header border-secondary text-white">
+                                                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Rule</h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form action="{{ url_for('edit_rule', rule_id=rule.id) }}" method="POST">
+                                                <div class="modal-body text-white">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Resource Type</label>
+                                                        <select name="resource_type" class="form-select" required>
+                                                            <option value="Compute" {{ 'selected' if rule.resource_type == 'Compute' }}>Compute</option>
+                                                            <option value="Storage" {{ 'selected' if rule.resource_type == 'Storage' }}>Storage</option>
+                                                            <option value="Database" {{ 'selected' if rule.resource_type == 'Database' }}>Database</option>
+                                                            <option value="Network" {{ 'selected' if rule.resource_type == 'Network' }}>Network</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-6 mb-3">
+                                                            <label class="form-label">Operator</label>
+                                                            <select name="operator" class="form-select" required>
+                                                                <option value="<" {{ 'selected' if rule.condition_operator == '<' }}>Less Than (&lt;)</option>
+                                                                <option value=">" {{ 'selected' if rule.condition_operator == '>' }}>Greater Than (&gt;)</option>
+                                                                <option value="=" {{ 'selected' if rule.condition_operator == '=' }}>Equals (=)</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-6 mb-3">
+                                                            <label class="form-label">Value (%)</label>
+                                                            <input type="number" name="value" class="form-control" value="{{ rule.threshold_value }}" required min="0" max="100">
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Recommendation Message</label>
+                                                        <textarea name="recommendation" class="form-control" rows="2" required>{{ rule.recommendation_text }}</textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer border-secondary">
+                                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-galaxy">Save Changes</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-sliders-h fa-3x text-primary-orange opacity-50 mb-3"></i>
+                        <p class="text-muted">No threshold rules configured yet.</p>
+                        {% if current_user.role == 'admin' %}
+                        <button class="btn btn-galaxy" data-bs-toggle="modal" data-bs-target="#addRuleModal">
+                            <i class="fas fa-plus me-2"></i>Add Your First Rule
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /.row -->
+</div><!-- /.container-fluid -->
+
+<!-- Add Rule Modal -->
+{% if current_user.role == 'admin' %}
+<div class="modal fade" id="addRuleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-modal border-secondary">
+            <div class="modal-header border-secondary text-white">
+                <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Add Optimization Rule</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('add_rule') }}" method="POST">
+                <div class="modal-body text-white">
+                    <div class="mb-3">
+                        <label class="form-label">Resource Type</label>
+                        <select name="resource_type" class="form-select" required>
+                            <option value="">Select type...</option>
+                            <option value="Compute">Compute (CPU/RAM)</option>
+                            <option value="Storage">Storage</option>
+                            <option value="Database">Database</option>
+                            <option value="Network">Network</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Operator</label>
+                            <select name="operator" class="form-select" required>
+                                <option value="<">Less Than (&lt;)</option>
+                                <option value=">">Greater Than (&gt;)</option>
+                                <option value="=">Equals (=)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Value (%)</label>
+                            <input type="number" name="value" class="form-control" placeholder="20" required min="0" max="100">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Recommendation Message</label>
+                        <textarea name="recommendation" class="form-control" rows="2" placeholder="e.g. Schedule shutdown after hours" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-galaxy">Create Rule</button>
+                </div>
+            </form>
+        </div>
     </div>
-</main>
+</div>
+{% endif %}
+
+<script>
+function saveNotifPrefs(btn) {
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+    btn.disabled = true;
+    setTimeout(() => {
+        btn.innerHTML = '<i class="fas fa-check me-2"></i>Saved!';
+        setTimeout(() => {
+            btn.innerHTML = '<i class="fas fa-save me-2"></i>Save Preferences';
+            btn.disabled = false;
+        }, 1500);
+    }, 700);
+}
+</script>
 {% endblock %}

@@ -1,98 +1,6 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!-- Sidebar Navigation -->
-<aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <a href="{{ url_for('dashboard') }}" class="sidebar-brand">
-            <i class="fas fa-cloud me-2"></i>Cloud Optimizer
-        </a>
-        <button class="sidebar-toggle" id="sidebarToggle">
-            <i class="fas fa-bars"></i>
-        </button>
-    </div>
-    
-    <!-- User Profile -->
-    <div class="user-profile">
-        <div class="user-avatar">{{ current_user.username[0].upper() }}</div>
-        <div class="user-name">{{ current_user.username }}</div>
-        <div class="user-role">Administrator</div>
-    </div>
-    
-    <!-- Navigation Menu -->
-    <nav class="sidebar-nav">
-        <div class="nav-section">
-            <div class="nav-section-title">Main</div>
-            <a href="{{ url_for('dashboard') }}" class="sidebar-nav-item active">
-                <i class="fas fa-chart-line"></i>Dashboard
-            </a>
-            <a href="{{ url_for('upload') }}" class="sidebar-nav-item">
-                <i class="fas fa-cloud-upload-alt"></i>Upload Data
-            </a>
-            <a href="{{ url_for('resources') }}" class="sidebar-nav-item">
-                <i class="fas fa-server"></i>Resources
-            </a>
-            <a href="{{ url_for('analytics') }}" class="sidebar-nav-item">
-                <i class="fas fa-chart-bar"></i>Analytics
-            </a>
-        </div>
-        
-        <div class="nav-section">
-            <div class="nav-section-title">Management</div>
-            <a href="#" class="sidebar-nav-item">
-                <i class="fas fa-users"></i>Users
-            </a>
-            <a href="{{ url_for('settings') }}" class="sidebar-nav-item">
-                <i class="fas fa-cog"></i>Settings
-            </a>
-            <a href="{{ url_for('settings') }}" class="sidebar-nav-item">
-                <i class="fas fa-shield-alt"></i>Security
-            </a>
-        </div>
-        
-        <div class="nav-section">
-            <div class="nav-section-title">Support</div>
-            <a href="#" class="sidebar-nav-item">
-                <i class="fas fa-question-circle"></i>Help Center
-            </a>
-            <a href="#" class="sidebar-nav-item">
-                <i class="fas fa-file-alt"></i>Documentation
-            </a>
-            <a href="{{ url_for('logout') }}" class="sidebar-nav-item">
-                <i class="fas fa-sign-out-alt"></i>Logout
-            </a>
-        </div>
-    </nav>
-</aside>
-
-<!-- Main Content Area -->
-<main class="main-content" id="mainContent">
-    <!-- Top Navigation Bar -->
-    <div class="top-nav">
-        <div class="d-flex align-items-center">
-            <button class="sidebar-toggle d-md-none" id="mobileSidebarToggle">
-                <i class="fas fa-bars"></i>
-            </button>
-            <div class="search-bar">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="Search resources, reports...">
-            </div>
-        </div>
-        
-        <div class="top-nav-actions">
-            <button class="notification-btn">
-                <i class="fas fa-bell"></i>
-                <span class="notification-badge">3</span>
-            </button>
-            <button class="notification-btn">
-                <i class="fas fa-cog"></i>
-            </button>
-            <a href="{{ url_for('upload') }}" class="btn btn-galaxy">
-                <i class="fas fa-cloud-upload-alt me-2"></i>Upload Data
-            </a>
-        </div>
-    </div>
-    
     <!-- Dashboard Content -->
     <div class="container-fluid p-4">
         <!-- Welcome Header -->
@@ -467,60 +375,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
     const searchBar = document.querySelector('.search-bar input');
     
-    // Auto-dashboard feature with cursor movement
-    let cursorTimer;
-    let isAutoMode = false;
-    let lastCursorX = 0;
-    let lastCursorY = 0;
-    let cursorMoveCount = 0;
-    
-    function startAutoDashboard() {
-        isAutoMode = true;
-        console.log('Auto-dashboard mode activated');
-        showNotification('Auto-dashboard mode activated', 'info');
-        
-        // Auto-refresh dashboard data every 30 seconds
-        autoRefreshInterval = setInterval(function() {
-            if (isAutoMode) {
-                refreshDashboardData();
-            }
-        }, 30000);
-    }
-    
-    function stopAutoDashboard() {
-        isAutoMode = false;
-        console.log('Auto-dashboard mode deactivated');
-        if (autoRefreshInterval) {
-            clearInterval(autoRefreshInterval);
-        }
-    }
-    
-    // Cursor movement detection
-    document.addEventListener('mousemove', function(e) {
-        const deltaX = Math.abs(e.clientX - lastCursorX);
-        const deltaY = Math.abs(e.clientY - lastCursorY);
-        
-        if (deltaX > 50 || deltaY > 50) {
-            cursorMoveCount++;
-            lastCursorX = e.clientX;
-            lastCursorY = e.clientY;
-            
-            // Activate auto-dashboard after 10 significant cursor movements
-            if (cursorMoveCount >= 10 && !isAutoMode) {
-                startAutoDashboard();
-            }
-        }
-        
-        // Reset cursor movement count after 5 seconds of inactivity
-        clearTimeout(cursorTimer);
-        cursorTimer = setTimeout(function() {
-            cursorMoveCount = 0;
-            if (isAutoMode) {
-                stopAutoDashboard();
-            }
-        }, 5000);
-    });
-    
     // Desktop sidebar toggle
     if (sidebarToggle) {
         sidebarToggle.addEventListener('click', function() {
@@ -625,26 +479,18 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
-// Initialize quick actions
+// Initialize quick actions — let <a> links navigate naturally, only handle divs
 function initializeQuickActions() {
-    const quickActionCards = document.querySelectorAll('.quick-action-card');
+    // Cards that are <a> tags already navigate. Only add JS for non-link cards.
+    const quickActionCards = document.querySelectorAll('.quick-action-card:not(a):not(button):not([type="submit"])');
     quickActionCards.forEach(card => {
         card.addEventListener('click', function(e) {
-            e.preventDefault();
-            const title = this.querySelector('.quick-action-title').textContent;
-            
+            // Don't intercept clicks on buttons/links inside the card
+            if (e.target.closest('button') || e.target.closest('a')) return;
+            const title = this.querySelector('.quick-action-title')?.textContent?.trim();
             switch(title) {
-                case 'Upload Data':
-                    window.location.href = '/upload';
-                    break;
                 case 'Add Resource':
                     showAddResourceModal();
-                    break;
-                case 'Export Report':
-                    exportLatestReport();
-                    break;
-                case 'Sync Data':
-                    syncCloudData();
                     break;
             }
         });
@@ -655,9 +501,11 @@ function initializeQuickActions() {
 function initializeResourceCards() {
     const resourceCards = document.querySelectorAll('.resource-card');
     resourceCards.forEach(card => {
-        card.addEventListener('click', function() {
-            const resourceName = this.querySelector('.resource-name').textContent;
-            showResourceDetails(resourceName);
+        card.addEventListener('click', function(e) {
+            // Don't intercept clicks that are on interactive elements
+            if (e.target.closest('button') || e.target.closest('a') || e.target.closest('form')) return;
+            const resourceName = this.querySelector('.resource-name')?.textContent;
+            if (resourceName) showResourceDetails(resourceName);
         });
     });
 }

@@ -9,6 +9,20 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     role = db.Column(db.String(50), default='user') # 'user' or 'admin'
+    email = db.Column(db.String(150), nullable=True)
+    display_name = db.Column(db.String(150), nullable=True)
+    
+    # Preferences
+    cost_alerts = db.Column(db.Boolean, default=True)
+    weekly_reports = db.Column(db.Boolean, default=True)
+    opt_tips = db.Column(db.Boolean, default=False)
+    sec_alerts = db.Column(db.Boolean, default=True)
+    
+    # Security
+    enable_2fa = db.Column(db.Boolean, default=False)
+    login_notify = db.Column(db.Boolean, default=True)
+    session_timeout = db.Column(db.String(50), default='1 hour')
+
     usage_data = db.relationship('UsageData', backref='user', lazy=True)
     reports = db.relationship('Report', backref='user', lazy=True)
 
